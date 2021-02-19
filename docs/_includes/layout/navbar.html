@@ -1,0 +1,45 @@
+<header class="navbar shadow-sm flex-column flex-md-row navbar-dark bg-dark box-shadow sticky-top">
+    <div class="navbar-expand-sm container">
+        <a class="navbar-brand mr-0 mr-md-2" href="{{ site.data.navbar.brand_href}}">
+            <img src="{{ site.data.navbar.brand_src}}" width="30" height="30"/>
+            {{ site.data.navbar.brand_name}}</a>
+        <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+            <span class="navbar-toggler-icon"></span>
+        </button>
+        <div class="collapse navbar-collapse" id="navbarSupportedContent">
+            <ul class="navbar-nav mr-auto">
+                {% for nav in site.data.navbar.main %}
+                {% if nav.childreen %}
+                    <li class="nav-item dropdown">
+                        <a class="nav-link dropdown-toggle" id="dropdownMenuId1" href="#" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">{{ nav.name }}</a>
+                        <div class="dropdown-menu" aria-labelledby="dropdownMenuId1">
+                            {% for subnav in nav.childreen %}
+                                <a class="dropdown-item" href="{{ subnav.href }}">{{ subnav.name }}</a>
+                            {% endfor %}
+
+                        </div>
+                    </li>
+                {% else %}
+                    <li class="nav-item">
+                        <a class="nav-link" href="{{ nav.href }}"><i class="{{ nav.icon }}"></i>{{ nav.name }}</a>
+                    </li>
+                {% endif %}
+                {% endfor %}
+            </ul>
+
+
+            {% for nav in site.data.navbar.right %}
+            <a class="navbar-brand fa-2x align-middle" href="{{ nav.href }}">
+                <i class="{{ nav.icon }}"></i>
+            </a>
+            {% endfor %}
+            <a class="btn btn-success m-0 p-0 ml-2" href="https://infracamp.org">
+                <img class="float-left m-1" src="https://infracamp.org/assets/infracamp.png" width="30" height="30"/>
+                <div style="font-size: 11px;width: 200px;text-align: center">I'm an infracamp.org project</div>
+                <div style="font-size: 14px;width: 200px;text-align: center;font-weight: bold;">visit infracamp.org</div>
+            </a>
+        </div>
+
+    </div>
+
+</header>

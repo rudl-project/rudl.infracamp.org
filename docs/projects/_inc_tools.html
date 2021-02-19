@@ -1,0 +1,20 @@
+<table>
+    <thead>
+    <td>Name</td>
+    <td>Description</td>
+    <td></td>
+    </thead>
+    <tbody>
+    {% for item in site.data.projects.tools %}
+    <tr>
+        <td><a href="{{item.name}}"><code><b>{{item.name}}</b></code></a></td>
+        <td>{{item.desc}}</td>
+        <td style="text-align: right">
+            <a target="_blank" href="https://github.com/nfra-project/{{item.name}}/actions"><img src="https://github.com/nfra-project/{{item.name}}/workflows/{{item.workflow}}/badge.svg"></a>
+            <br/><a target="_blank" href="https://github.com/nfra-project/{{item.name}}/releases"><img src="https://img.shields.io/github/release/nfra-project/{{item.name}}.svg"></a>
+        </td>
+    </tr>
+    {% endfor %}
+    </tbody>
+
+</table>

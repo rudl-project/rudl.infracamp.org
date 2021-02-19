@@ -1,0 +1,20 @@
+
+brand_src: "/assets/logo-rudl.png"
+brand_name: "rudl-project"
+brand_href: "/"
+
+main:
+  - name: "Setup"
+    href: "/setup"
+  - name: "Projects"
+    href: "/projects"
+
+right:
+  - icon: "fab fa-github"
+    href: "http://github.com/rudl-project"
+#  - name: "Getting started"
+#    href: "/getting-started/"
+#  - name: "Projects"
+#    href: /project/
+
+

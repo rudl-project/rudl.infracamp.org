@@ -1,0 +1,41 @@
+<!doctype html>
+<html lang="en">
+{% include layout/head.html %}
+<body>
+{% include layout/navbar.html %}
+<div style="margin: 30px;"></div>
+<div class="container container-fluid">
+    <div class="row flex-xl-nowrap">
+        <div class="col-12 col-md-12 col-lg-9 markdown-body">
+            <h1>{{ page.title }}</h1>
+            <p>{{ page.description }}</p>
+            {{ content }}
+        </div>
+        <div class="col-md-0 col-lg-3">
+            <p></p>
+            <div class="list-group shadow-sm sticky-top" id="scroll-spy" style="top:3em"></div>
+        </div>
+    </div>
+</div>
+{% include layout/footer.html %}
+{% include layout/script.html %}
+
+<script language="javascript">
+    $("h2").each(function (elem) {
+        var title = $(this).attr("title");
+        if (typeof title ==  "undefined")
+            title = $("small", this).text();
+        if (title == "")
+            title = $(this).text();
+
+        var key = new String(title);
+        key = key.replace(/[ \/]/g, "");
+        $(this).append("<a id='" + key +"'></a>");
+
+        $("#scroll-spy").append('<a class="list-group-item list-group-item-action" href="#' + key + '">' + title + "</a>");
+    })
+    $('body').scrollspy({ target: '#scroll-spy' });
+
+</script>
+</body>
+</html>

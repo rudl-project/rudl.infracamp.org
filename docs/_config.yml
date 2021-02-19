@@ -1,0 +1,17 @@
+title: KasimirJS
+description: educational grade development tools
+google_analytics:
+show_downloads: true
+
+# Make directory-style links
+permalink: pretty
+
+defaults:
+  - scope:
+      path: ""
+    values:
+      layout: "default"
+      title: developer camp
+
+plugins:
+- jekyll-optional-front-matter
