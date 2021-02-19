@@ -1,5 +1,6 @@
 ---
 title: Setup
+layout: scrollspy
 description: |
     How to start the master Node 
 ---

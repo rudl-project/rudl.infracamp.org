@@ -10,7 +10,7 @@ defaults:
   - scope:
       path: ""
     values:
-      layout: "default"
+      layout: "default-fullsize"
       title: developer camp
 
 plugins:
