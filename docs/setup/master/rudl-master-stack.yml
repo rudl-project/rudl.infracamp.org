@@ -1,0 +1,59 @@
+version: "3.7"
+
+services:
+  ingress-nginx:
+    image: rudl/ingress-nginx:unstable
+    deploy:
+      mode: global
+    ports:
+      - target: 80
+        published: 80
+        protocol: tcp
+        mode: host
+      - target: 443
+        published: 443
+        protocol: tcp
+        mode: host
+    environment:
+      RUDL_GITDB_URL: "http://gitdb"
+      RUDL_GITDB_CLIENT_ID: ingress1
+      RUDL_GITDB_CLIENT_SECRET: "file:/var/run/secrets/ingress1_client_secret"
+      INGRESS_SCOPE: ingress
+      INGRESS_OBJECT_NAME: ingress1.yml
+      SSL_CERT_SCOPE: ssl_certs
+    networks:
+      - ingress-net
+    secrets:
+      - ingress1_client_secret
+
+  gitdb:
+    image: rudl/gitdb:unstable
+    environment:
+      REPO_GIT_URL: git@PUT_YOUR_GIT_SSH_CLONE/URL/HERE.git
+      REPO_GIT_SSH_KEY: "file:/var/run/secrets/rudldb_ssh_key"
+      RUDL_VAULT_SECRET: "file:/var/run/secrets/rudldb_vault_secret"
+    deploy:
+      placement:
+        constraints: [node.role == manager]
+    volumes:
+      - "gitdbvol:/data"
+    networks:
+      - ingress-net
+    secrets:
+      - rudldb_vault_secret
+      - rudldb_ssh_key
+
+volumes:
+  gitdbvol:
+
+secrets:
+  rudldb_vault_secret:
+    external: true
+  rudldb_ssh_key:
+    external: true
+  ingress1_client_secret:
+    external: true
+
+networks:
+  ingress-net:
+    name: ingress-net
