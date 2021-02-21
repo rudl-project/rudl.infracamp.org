@@ -12,17 +12,25 @@ your own. Afterwards, cluster setup will be only one line. But let's start:
   
 ***Prepare the server***
 ```bash
-apt-get -y install curl pwgen
+sudo apt-get -y install curl pwgen docker.io
+sudo gpasswd -a $USER docker
+<logout and login again>
 docker swarm init
 ```
+
+If using Ubuntu, don't use snap version of docker installed during boot time.
 
 
 ***Create and register secrets***
 ```bash
 ssh-keygen -f rudldb_ssh_key -t ed25519 -q -N ""
 pwgen -s 128 1 > rudldb_vault_secret
+pwgen -s 64 1 > ingress1_client_secret
+
 cat rudldb_vault_secret | docker secret create rudldb_vault_secret -
 cat rudldb_ssh_key | docker secret create rudldb_ssh_key -
+cat ingress1_client_secret | docker secret create ingress1_client_secret -
+
 curl -o rudl-master-stack.yml https://raw.githubusercontent.com/rudl-project/rudl.infracamp.org/main/docs/setup/master/rudl-master-stack.yml
 ```
 
@@ -64,9 +72,15 @@ with your **ssh clone url**.
 Now it's time to start your initial setup and take a first test.
 
 ```
-docker stack deploy rudl-master-stack.yml rudl
+docker stack deploy -c rudl-master-stack.yml rudl
 ```
 
 
 ## Did it work?
+
+Check the service status
+
+```
+docker service ps rudl_gitdb
+```
 

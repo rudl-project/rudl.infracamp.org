@@ -1,6 +1,23 @@
 version: "3.7"
 
 services:
+  gitdb:
+    image: rudl/gitdb:unstable
+    environment:
+      GIT_REPO_URL: git@PUT_YOUR_GIT_SSH_CLONE/URL/HERE.git
+      GIT_REPO_SSH_KEY: "file:/var/run/secrets/rudldb_ssh_key"
+      RUDL_VAULT_SECRET: "file:/var/run/secrets/rudldb_vault_secret"
+    deploy:
+      placement:
+        constraints: [ node.role == manager ]
+    volumes:
+      - "gitdbvol:/data"
+    networks:
+      - ingress-net
+    secrets:
+      - rudldb_vault_secret
+      - rudldb_ssh_key
+
   ingress-nginx:
     image: rudl/ingress-nginx:unstable
     deploy:
@@ -26,22 +43,7 @@ services:
     secrets:
       - ingress1_client_secret
 
-  gitdb:
-    image: rudl/gitdb:unstable
-    environment:
-      REPO_GIT_URL: git@PUT_YOUR_GIT_SSH_CLONE/URL/HERE.git
-      REPO_GIT_SSH_KEY: "file:/var/run/secrets/rudldb_ssh_key"
-      RUDL_VAULT_SECRET: "file:/var/run/secrets/rudldb_vault_secret"
-    deploy:
-      placement:
-        constraints: [node.role == manager]
-    volumes:
-      - "gitdbvol:/data"
-    networks:
-      - ingress-net
-    secrets:
-      - rudldb_vault_secret
-      - rudldb_ssh_key
+
 
 volumes:
   gitdbvol:
