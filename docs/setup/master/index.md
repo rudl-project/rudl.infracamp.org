@@ -82,5 +82,12 @@ Check the service status
 
 ```
 docker service ps rudl_gitdb
+docker service logs rudl_gitdb
 ```
+
+## GitDb Configuration
+
+Now it's time to clone your repository locally and configure the 
+clients. Download the gitdb.yml
+
 
