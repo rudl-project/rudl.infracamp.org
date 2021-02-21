@@ -12,7 +12,7 @@ your own. Afterwards, cluster setup will be only one line. But let's start:
   
 ***Prepare the server***
 ```bash
-sudo apt-get -y install curl pwgen docker.io
+sudo apt-get -y install curl pwgen docker.io whois
 sudo gpasswd -a $USER docker
 <logout and login again>
 docker swarm init
@@ -87,7 +87,26 @@ docker service logs rudl_gitdb
 
 ## GitDb Configuration
 
+**We assume you do the following steps on your workstation**
+
 Now it's time to clone your repository locally and configure the 
 clients. Download the gitdb.yml
 
+Create a new gitdb.conf.yml in the projects root directory:
+```
+curl -o gitdb.conf.yml https://raw.githubusercontent.com/rudl-project/rudl.infracamp.org/main/docs/setup/master/gitdb.conf.yml
+```
+
+And insert the hash Values into clients:
+
+```
+cat ingress1_client_secret | mkpasswd -m sha-512 -s
+```
+
+Copy the output and put it in '<put in: ingress1_client_secret hash>' of gitdb.conf.yml. Then
+Commit and push the changes.
+
+```
+git commit -am "gitdb adjustments for startup"
+```
 

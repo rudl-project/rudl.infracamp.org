@@ -2,12 +2,11 @@ version: 1
 clients:
   - name: ingress1
     accessKeysHash:
-      - "<put hash of ingress1 here>"
-      # Password: test
+      - "<put in: ingress1_client_secret hash>"
+
   - name: ssl_issuer1
     accessKeysHash:
     - "<put hash of >"
-      # Password: test
 
 scopes:
   - name: ssl_certs
