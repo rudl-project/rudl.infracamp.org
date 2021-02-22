@@ -19,3 +19,9 @@ scopes:
   - name: ingress
     allowRead:
       - ingress1
+
+repo_hook_keys:
+  - "$6$KWbvXekD0OVQri58$XOICOXrCCKzhkitxGR6voYUpFZxvNR8nKS1J0DFhQujhsj62Ov8rUHannKlWec4ncXPlfi6LlFSRoKt.dIMeO1"
+
+trigger_hook_keys:
+  - "$6$KWbvXekD0OVQri58$XOICOXrCCKzhkitxGR6voYUpFZxvNR8nKS1J0DFhQujhsj62Ov8rUHannKlWec4ncXPlfi6LlFSRoKt.dIMeO1"

@@ -128,3 +128,28 @@ cat issuer1_client_secret | mkpasswd -m sha-512 -s
 ```
 cat swarm1_client_secret | mkpasswd -m sha-512 -s
 ```
+
+
+## Configure the repository hook
+
+On your gitops repository, add `https://gitdb.yourdomain.xy/hooks/repo?token=XYZ` as 
+trigger url:
+
+![](github-webhook.png)
+
+## Test your configuration
+
+Now push 
+
+## Trigger update after CI/CD builds
+
+Rudl is build to deploy changed containers. Therefor any project
+can call `/hooks/trigger?token=xyz` which will trigger a update.
+
+
+## Make it self containing
+
+If you want - and it's recommended - you can manage the rudl master
+cluster with rudl as well. To do so, copy your manually created master-rudl-stack.yml
+to your gitops repository and define it as stack.
+

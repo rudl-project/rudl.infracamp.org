@@ -69,12 +69,10 @@ services:
       RUDL_GITDB_CLIENT_SECRET: "file:/var/run/secrets/swarm1_client_secret"
       SWARM_SCOPE: cluster1
       SWARM_CONF_OBJECT: swarm.conf.yml
-    networks:
-      - ingress-net
     secrets:
       - swarm1_client_secret
     volumes:
-      - "/var/lib/docker.sock:/var/lib/docker.sock"
+      - "/var/run/docker.sock:/var/run/docker.sock"
 
 
 volumes:
