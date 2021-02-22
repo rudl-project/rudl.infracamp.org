@@ -48,23 +48,38 @@ services:
     image: rudl/cert-issuer:unstable
     environment:
       RUDL_GITDB_URL: http://gitdb
-      RUDL_GITDB_CLIENT_ID: cert_issuer1
-      RUDL_GITDB_CLIENT_SECRET: "file:/var/run/secrets/issuer_client_secret"
+      RUDL_GITDB_CLIENT_ID: issuer1
+      RUDL_GITDB_CLIENT_SECRET: "file:/var/run/secrets/issuer1_client_secret"
       SSL_CERT_SCOPE: ssl_certs
       CERT_REQ_OBJECT: issuer.conf.yml
-      TOS_EMAIL:"m@tth.es"
+      TOS_EMAIL: "your@email.xy"
     networks:
       - ingress-net
     secrets:
       - issuer1_client_secret
 
-volumes:
-  gitdbvol:
+  agent-swarm:
+    image: rudl/agent-swarm:unstable
+    deploy:
+      placement:
+        constraints: [ node.role == manager ]
+    environment:
+      RUDL_GITDB_URL: http://gitdb
+      RUDL_GITDB_CLIENT_ID: swarm1
+      RUDL_GITDB_CLIENT_SECRET: "file:/var/run/secrets/swarm1_client_secret"
+      SWARM_SCOPE: cluster1
+      SWARM_CONF_OBJECT: swarm.conf.yml
     networks:
       - ingress-net
     secrets:
-      - rudldb_vault_secret
-      - rudldb_ssh_key
+      - swarm1_client_secret
+    volumes:
+      - "/var/lib/docker.sock:/var/lib/docker.sock"
+
+
+volumes:
+  gitdbvol:
+
 secrets:
   rudldb_vault_secret:
     external: true
@@ -73,6 +88,8 @@ secrets:
   ingress1_client_secret:
     external: true
   issuer1_client_secret:
+    external: true
+  swarm1_client_secret:
     external: true
 
 networks:

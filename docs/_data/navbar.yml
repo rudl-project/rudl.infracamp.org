@@ -5,7 +5,7 @@ brand_href: "/"
 
 main:
   - name: "Setup"
-    href: "/setup"
+    href: "/setup/master"
   - name: "Projects"
     href: "/projects"
 

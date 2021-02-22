@@ -27,11 +27,13 @@ ssh-keygen -f rudldb_ssh_key -t ed25519 -q -N ""
 pwgen -s 128 1 > rudldb_vault_secret
 pwgen -s 64 1 > ingress1_client_secret
 pwgen -s 64 1 > issuer1_client_secret
+pwgen -s 64 1 > swarm1_client_secret
 
 cat rudldb_vault_secret | docker secret create rudldb_vault_secret -
 cat rudldb_ssh_key | docker secret create rudldb_ssh_key -
 cat ingress1_client_secret | docker secret create ingress1_client_secret -
 cat issuer1_client_secret | docker secret create issuer1_client_secret -
+cat swarm1_client_secret | docker secret create swarm1_client_secret -
 
 curl -o rudl-master-stack.yml https://raw.githubusercontent.com/rudl-project/rudl.infracamp.org/main/docs/setup/master/rudl-master-stack.yml
 ```
@@ -116,3 +118,13 @@ git commit -am "gitdb adjustments for startup"
 ## Configure the Issuer service
 
 
+```
+cat issuer1_client_secret | mkpasswd -m sha-512 -s
+```
+
+
+## Configure swarm agent service
+
+```
+cat swarm1_client_secret | mkpasswd -m sha-512 -s
+```
