@@ -26,10 +26,12 @@ If using Ubuntu, don't use snap version of docker installed during boot time.
 ssh-keygen -f rudldb_ssh_key -t ed25519 -q -N ""
 pwgen -s 128 1 > rudldb_vault_secret
 pwgen -s 64 1 > ingress1_client_secret
+pwgen -s 64 1 > issuer1_client_secret
 
 cat rudldb_vault_secret | docker secret create rudldb_vault_secret -
 cat rudldb_ssh_key | docker secret create rudldb_ssh_key -
 cat ingress1_client_secret | docker secret create ingress1_client_secret -
+cat issuer1_client_secret | docker secret create issuer1_client_secret -
 
 curl -o rudl-master-stack.yml https://raw.githubusercontent.com/rudl-project/rudl.infracamp.org/main/docs/setup/master/rudl-master-stack.yml
 ```
@@ -109,4 +111,8 @@ Commit and push the changes.
 ```
 git commit -am "gitdb adjustments for startup"
 ```
+
+
+## Configure the Issuer service
+
 

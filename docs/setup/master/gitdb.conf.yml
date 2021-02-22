@@ -4,7 +4,7 @@ clients:
     accessKeysHash:
       - "<put in: ingress1_client_secret hash>"
 
-  - name: ssl_issuer1
+  - name: issuer1
     accessKeysHash:
     - "<put hash of >"
 
@@ -12,9 +12,9 @@ scopes:
   - name: ssl_certs
     allowRead:
       - ingress1
-      - ssl_issuer1
+      - issuer1
     allowWrite:
-      - ssl_issuer1
+      - issuer1
 
   - name: ingress
     allowRead:

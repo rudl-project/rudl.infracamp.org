@@ -38,22 +38,41 @@ services:
       INGRESS_SCOPE: ingress
       INGRESS_OBJECT_NAME: ingress1.yml
       SSL_CERT_SCOPE: ssl_certs
+      SSL_CERT_ISSUER_URL: http://cert-issuer
     networks:
       - ingress-net
     secrets:
       - ingress1_client_secret
 
-
+  cert-issuer:
+    image: rudl/cert-issuer:unstable
+    environment:
+      RUDL_GITDB_URL: http://gitdb
+      RUDL_GITDB_CLIENT_ID: cert_issuer1
+      RUDL_GITDB_CLIENT_SECRET: "file:/var/run/secrets/issuer_client_secret"
+      SSL_CERT_SCOPE: ssl_certs
+      CERT_REQ_OBJECT: issuer.conf.yml
+      TOS_EMAIL:"m@tth.es"
+    networks:
+      - ingress-net
+    secrets:
+      - issuer1_client_secret
 
 volumes:
   gitdbvol:
-
+    networks:
+      - ingress-net
+    secrets:
+      - rudldb_vault_secret
+      - rudldb_ssh_key
 secrets:
   rudldb_vault_secret:
     external: true
   rudldb_ssh_key:
     external: true
   ingress1_client_secret:
+    external: true
+  issuer1_client_secret:
     external: true
 
 networks:
