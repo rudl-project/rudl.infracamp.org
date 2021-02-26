@@ -1,0 +1,18 @@
+<table>
+    <tbody>
+    <tr>
+        <td colspan="3">Platform: <b>x86</b> (IBM-PC)</td>
+    </tr>
+    {% for item in site.data.projects.rudl %}
+    <tr>
+        <td><a  href="{{item.name}}/"><code><b>{{item.name}}</b></code></a></td>
+        <td>{{item.desc}}</td>
+        <td style="text-align: right">
+            <a target="_blank" href="https://github.com/{{item.gh}}/actions"><img src="https://github.com/{{item.gh}}/workflows/{{item.workflow}}/badge.svg"></a>
+            <a target="_blank" href="https://cloud.docker.com/repository/docker/{{item.dh}}/builds"><img src="https://img.shields.io/docker/pulls/{{item.dh}}.svg"></a>
+        </td>
+    </tr>
+    {% endfor %}
+    </tbody>
+
+</table>
