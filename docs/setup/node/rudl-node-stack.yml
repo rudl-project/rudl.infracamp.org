@@ -1,0 +1,22 @@
+version: "3.7"
+
+services:
+  agent-swarm:
+    image: rudl/agent-swarm:unstable
+    deploy:
+      placement:
+        constraints: [ node.role == manager ]
+    environment:
+      RUDL_GITDB_URL: http://gitdb
+      RUDL_GITDB_CLIENT_ID: swarm1
+      RUDL_GITDB_CLIENT_SECRET: "file:/var/run/secrets/node_client_secret"
+      SWARM_SCOPE: cluster1
+      SWARM_CONF_OBJECT: swarm.conf.yml
+    secrets:
+      - node_client_secret
+    volumes:
+      - "/var/run/docker.sock:/var/run/docker.sock"
+
+secrets:
+  node_client_secret:
+    file: ./node_client_secret
