@@ -1,0 +1,40 @@
+#!/usr/sbin/nft -f
+
+flush ruleset
+
+table inet filter {
+
+    chain input {
+        type filter hook input priority 0;
+        policy drop;
+
+        # Allow localhost
+        iif lo accept
+
+        # Allow established traffic
+        ct state established,related accept
+
+        # ICMP / ping
+        ip protocol icmp accept
+        ip6 nexthdr icmpv6 accept
+
+        # SSH
+        tcp dport 22 accept
+
+        # HTTP/HTTPS
+        tcp dport {80,443} accept
+    }
+
+    chain forward {
+        type filter hook forward priority 0;
+
+        # IMPORTANT:
+        # Let Docker manage forwarding itself
+        policy accept;
+    }
+
+    chain output {
+        type filter hook output priority 0;
+        policy accept;
+    }
+}
