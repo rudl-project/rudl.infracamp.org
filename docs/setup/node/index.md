@@ -15,8 +15,17 @@ cat <plainPassword> > node_client_secret
 docker stack init
 cat node_client_secret | docker secret create ingress1_client_secret -
 
-curl -o rudl-node-stack.yml https://raw.githubusercontent.com/rudl-project/rudl.infracamp.org/main/docs/setup/master/rudl-node-stack.yml 
+curl -o rudl-node-stack.yml https://raw.githubusercontent.com/rudl-project/rudl.infracamp.org/main/docs/setup/node/rudl-node-stack.yml 
 ```
+
+Edit the rudl-node-stack.yml file
+
+Then run the stack
+
+```
+docker stack deploy -c ruld-node-stack.yml rudl
+``
+
 
 
 
