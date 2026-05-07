@@ -59,6 +59,14 @@ Edit /etc/hosts and set the hostname and shortcut than run
 hostnamectl set-hostname <new-fqdn>
 ```
 
+If you want to server DNS Server on the host, you have to disable the Stub-Listener:
+
+```
+# /etc/systemd/resolved.conf
+[Resolve]
+DNSStubListener=no
+``
+
 ### Allow SSH Public Key Login for User
 
 Run and login to new maschine from your workstation to set the SSH Key. Make sure login and sudo bash works.
