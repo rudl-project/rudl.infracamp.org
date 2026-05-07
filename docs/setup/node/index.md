@@ -94,3 +94,17 @@ EOF'
 ```
 
 
+
+### Configure Firewall
+
+Using nftables add [nftables.conf](nftables.conf.txt) to `/etc/nftables.conf` and aktivate
+the Firewall by running 
+
+```bash
+sudo systemctl enable nftables
+sudo nft -f /etc/nftables.conf
+sudo nft list ruleset
+``
+
+
+
