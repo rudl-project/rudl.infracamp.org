@@ -4,8 +4,10 @@ brand_name: "rudl-project"
 brand_href: "/"
 
 main:
-  - name: "Setup"
+  - name: "Setup Master"
     href: "/setup/master"
+  - name: "Setup Node"
+    href: "/setup/node"
   - name: "Projects"
     href: "/projects"
 
