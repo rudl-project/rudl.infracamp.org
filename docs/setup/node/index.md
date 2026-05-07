@@ -2,7 +2,7 @@
 title: Join Nodes
 layout: scrollspy
 description: |
-    How to start the master Node 
+    How to start the client Nodes including Setup for Nodes 
 ---
 
 ## Joining Nodes
