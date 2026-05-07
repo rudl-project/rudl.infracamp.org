@@ -13,7 +13,7 @@ SSH into the node system and run
 cd /root/
 cat <plainPassword> > node_client_secret
 docker swarm init
-cat node_client_secret | docker secret create ingress1_client_secret -
+cat node_client_secret | docker secret create node_client_secret -
 
 curl -o rudl-node-stack.yml https://raw.githubusercontent.com/rudl-project/rudl.infracamp.org/main/docs/setup/node/rudl-node-stack.yml 
 ```
@@ -90,6 +90,8 @@ PermitEmptyPasswords no
 MaxAuthTries 3
 PerSourceMaxStartups 3
 PerSourcePenalties authfail:300
+Banner none
+DebianBanner no
 EOF'
 ```
 
@@ -104,7 +106,7 @@ the Firewall by running
 sudo systemctl enable nftables
 sudo nft -f /etc/nftables.conf
 sudo nft list ruleset
-``
+```
 
 
 
