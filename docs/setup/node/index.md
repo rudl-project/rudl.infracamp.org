@@ -22,9 +22,9 @@ Edit the rudl-node-stack.yml file
 
 Then run the stack
 
-```
+```bash
 docker stack deploy -c ruld-node-stack.yml rudl
-``
+```
 
 
 
