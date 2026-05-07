@@ -21,6 +21,10 @@ table inet filter {
         # SSH
         tcp dport 22 accept
 
+        # DNS (TCP + UDP)
+        tcp dport 53 accept
+        udp dport 53 accept
+
         # HTTP/HTTPS
         tcp dport {80,443} accept
     }
