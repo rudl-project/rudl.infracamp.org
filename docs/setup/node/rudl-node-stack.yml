@@ -7,7 +7,7 @@ services:
       placement:
         constraints: [ node.role == manager ]
     environment:
-      RUDL_GITDB_URL: http://gitdb
+      RUDL_GITDB_URL: https://gitdb.yourhostname
       RUDL_GITDB_CLIENT_ID: swarm1
       RUDL_GITDB_CLIENT_SECRET: "file:/var/run/secrets/node_client_secret"
       SWARM_SCOPE: cluster1
