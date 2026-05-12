@@ -67,6 +67,7 @@ If you want to server DNS Server on the host, you have to disable the Stub-Liste
 DNSStubListener=no
 ```
 
+Danach Netplan Nameserver Updaten in `/etc/netplan/00-installer-config.yaml`. **Achtung: Keine Tabs benutzen!** Config mit `sudo netplan try` testen!
 
 
 ### Allow SSH Public Key Login for User
