@@ -119,5 +119,20 @@ sudo nft -f /etc/nftables.conf
 sudo nft list ruleset
 ```
 
+### Configure Cronjobs to cleanup stuff
+
+```bash
+echo '0 3 * * * root /usr/bin/docker system prune -af >/var/log/docker-prune.log 2>&1' | sudo tee /etc/cron.d/docker-prune
+```
+
+
+### Unattended Updates aktivieren
+
+```bash
+sudo apt install unattended-upgrades apt-listchanges
+sudo dpkg-reconfigure unattended-upgrades
+```
+Then edit `/etc/apt/apt.conf.d/50unattended-upgrades` and add your e-Mail Address
+
 
 
