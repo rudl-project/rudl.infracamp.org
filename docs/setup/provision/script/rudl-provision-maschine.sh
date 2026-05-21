@@ -384,11 +384,11 @@ configure_firewall() {
   udp_ports=$(parse_port_list "OPEN_PORTS_UDP" "${OPEN_PORTS_UDP:-}")
 
   if [[ -n "$tcp_ports" ]]; then
-    tcp_rule="    tcp dport { ${tcp_ports} } accept"
+    tcp_rule=$(printf '        tcp dport { %s } accept' "$tcp_ports")
   fi
 
   if [[ -n "$udp_ports" ]]; then
-    udp_rule="    udp dport { ${udp_ports} } accept"
+    udp_rule=$(printf '        udp dport { %s } accept' "$udp_ports")
   fi
 
   cat > /etc/nftables.conf <<EOF
@@ -397,29 +397,41 @@ configure_firewall() {
 flush ruleset
 
 table inet filter {
-  chain input {
-    type filter hook input priority 0;
-    policy drop;
 
-    iif "lo" accept
-    ct state established,related accept
-    ct state invalid drop
+    chain input {
+        type filter hook input priority 0;
+        policy drop;
 
-    ip protocol icmp accept
-    ip6 nexthdr icmpv6 accept
-${tcp_rule}
-${udp_rule}
-  }
+        # Allow localhost
+        iif lo accept
 
-  chain forward {
-    type filter hook forward priority 0;
-    policy drop;
-  }
+        # Allow established traffic
+        ct state established,related accept
 
-  chain output {
-    type filter hook output priority 0;
-    policy accept;
-  }
+        # ICMP / ping
+        ip protocol icmp accept
+        ip6 nexthdr icmpv6 accept
+${tcp_rule:+
+
+        # Allowed TCP ports from env
+$tcp_rule}${udp_rule:+
+
+        # Allowed UDP ports from env
+$udp_rule}
+    }
+
+    chain forward {
+        type filter hook forward priority 0;
+
+        # IMPORTANT:
+        # Let Docker manage forwarding itself
+        policy accept;
+    }
+
+    chain output {
+        type filter hook output priority 0;
+        policy accept;
+    }
 }
 EOF
 
