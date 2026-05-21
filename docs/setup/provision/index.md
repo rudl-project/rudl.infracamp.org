@@ -31,7 +31,7 @@ echo "set mouse=" > ~/.vimrc           ## Disable mouse support for vim
 
 3) Erstelle die [`server.env` Datei](script/server.env.txt) mit den notwendigen Umgebungsvariablen:
 
-Entweder dirket datei erstellen oder mit curl herunterladen:
+Entweder direkt datei erstellen oder mit curl herunterladen:
 
 ```bash
 curl -fsSL ${RUDL_DOWNLOAD_URL}server.env -o server.env
@@ -41,6 +41,6 @@ curl -fsSL ${RUDL_DOWNLOAD_URL}server.env -o server.env
 
 ```bash
 curl -fsSL ${RUDL_DOWNLOAD_URL}cloud-init-ubuntu-26-04.yml -o cloud-init.yml
-soruce server.env
+source server.env
 envsubst < cloud-init.yml | cloud-init -d init -f -
 ```
