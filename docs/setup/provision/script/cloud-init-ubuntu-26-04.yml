@@ -10,6 +10,7 @@ packages:
   - openssh-server
   - nftables
   - unattended-upgrades
+  - docker.io
   - apt-listchanges
   - cron
 
@@ -103,3 +104,4 @@ runcmd:
   - systemctl restart cron
   - systemctl enable unattended-upgrades
   - systemctl restart unattended-upgrades
+

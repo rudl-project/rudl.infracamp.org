@@ -45,6 +45,7 @@ set -a && source server.env && set +a && envsubst < cloud-init-tpl.yml > cloud-i
 
 cloud-init clean --logs
 cloud-init modules --file cloud-init.yml --mode=config
+cloud-init single --file cloud-init.yml --name cc_users_groups --frequency always
 cloud-init modules --file cloud-init.yml --mode=final
 cloud-init status
 ```
