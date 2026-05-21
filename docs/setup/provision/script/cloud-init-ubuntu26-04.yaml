@@ -6,7 +6,6 @@ package_update: true
 package_upgrade: true
 
 packages:
-  - vim
   - sudo
   - openssh-server
   - nftables
@@ -26,16 +25,6 @@ users:
       - ${SSH_PUBLIC_KEY}
 
 write_files:
-  - path: /root/.vimrc
-    permissions: "0644"
-    content: |
-      set mouse=
-
-  - path: /home/${ADMIN_USER}/.vimrc
-    owner: ${ADMIN_USER}:${ADMIN_USER}
-    permissions: "0644"
-    content: |
-      set mouse=
 
   - path: /etc/ssh/sshd_config.d/hardened.conf
     permissions: "0644"
@@ -105,7 +94,6 @@ write_files:
       Unattended-Upgrade::Automatic-Reboot "false";
 
 runcmd:
-  - update-alternatives --set editor /usr/bin/vim.basic || true
   - rm -f /etc/ssh/sshd_config.d/permit_root.conf
   - sshd -t
   - systemctl reload ssh || systemctl restart ssh

@@ -18,15 +18,29 @@ To provision the nodes, we provide a cloud-init script. The [hard manual way is 
 apt-get update
 apt-get install -y curl cloud-init vim gettext-base
 export RUDL_DOWNLOAD_URL=https://raw.githubusercontent.com/rudl-project/rudl.infracamp.org/main/docs/setup/provision/script/
+```
 
+**Problem with vim on new Ubuntu 26.04:**
 
+Copy n past issue with mouse support. Disable mouse support for vim:
+
+```bash
+update-alternatives --config editor  ## Set Edtior to vim.basic
+echo "set mouse=" > ~/.vimrc           ## Disable mouse support for vim
+```
+
+3) Erstelle die [`server.env` Datei](script/server.env.txt) mit den notwendigen Umgebungsvariablen:
+
+Entweder dirket datei erstellen oder mit curl herunterladen:
+
+```bash
 curl -fsSL ${RUDL_DOWNLOAD_URL}server.env -o server.env
 ```
 
-3) Edit the server.env file and set the following variables
 4) Run the cloud-init script:
 
 ```bash
 curl -fsSL ${RUDL_DOWNLOAD_URL}cloud-init-ubuntu-26-04.yml -o cloud-init.yml
+soruce server.env
 envsubst < cloud-init.yml | cloud-init -d init -f -
 ```
