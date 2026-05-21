@@ -41,6 +41,10 @@ curl -fsSL ${RUDL_DOWNLOAD_URL}server.env -o server.env
 
 ```bash
 curl -fsSL ${RUDL_DOWNLOAD_URL}cloud-init-ubuntu-26-04.yml -o cloud-init.yml
-source server.env
-envsubst < cloud-init.yml | cloud-init -d init -f -
+set -a && source server.env && set +a && envsubst < cloud-init.yml > cloud-init-mod.yml
+
+cloud-init clean --logs
+cloud-init modules --file cloud-init-mod.yml --mode=config
+cloud-init modules --file cloud-init-mod.yml --mode=final
+cloud-init status
 ```
