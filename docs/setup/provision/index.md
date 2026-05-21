@@ -45,10 +45,12 @@ set -a && source server.env && set +a && envsubst < cloud-init-tpl.yml > cloud-i
 
 cloud-init clean --logs
 
+cloud-init single --file cloud-init.yml --name cc_set_hostname --frequency always
+cloud-init single --file cloud-init.yml --name cc_update_hostname --frequency always
+cloud-init single --file cloud-init.yml --name cc_update_etc_hosts --frequency always
 cloud-init single --file cloud-init.yml --name cc_users_groups --frequency always
 cloud-init single --file cloud-init.yml --name cc_write_files --frequency always
 cloud-init single --file cloud-init.yml --name cc_package_update_upgrade_install --frequency always
-
 cloud-init single --file cloud-init.yml --name cc_runcmd --frequency always
 
 cloud-init status --long
