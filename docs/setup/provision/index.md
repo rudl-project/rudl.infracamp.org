@@ -9,6 +9,8 @@ description: |
 
 To provision the nodes, we provide a pure Bash provisioning script. The [hard manual way is documented here](manual-ubuntu-26-04).
 
+**Compatibility:** currently only **Ubuntu 26.04** is supported by the provisioning script.
+
 We also keep a [cloud-init.yml](script/cloud-init-ubuntu-26-04.yml) template in this directory, but the recommended setup flow is the Bash script below.
 
 ## Use the Provision Script
@@ -22,7 +24,7 @@ Use [`rudl-provision-maschine.sh`](script/rudl-provision-maschine.sh) to provisi
 
 ```bash
 apt-get update
-apt-get install -y curl vim
+apt-get install -y curl vim lsb-release
 export RUDL_DOWNLOAD_URL=https://raw.githubusercontent.com/rudl-project/rudl.infracamp.org/refs/heads/main/docs/setup/provision/script/
 ```
 

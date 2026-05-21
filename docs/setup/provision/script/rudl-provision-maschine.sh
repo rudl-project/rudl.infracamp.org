@@ -5,10 +5,12 @@ set -Eeuo pipefail
 SCRIPT_NAME=$(basename "$0")
 DEBUG=${DEBUG:-0}
 CURRENT_STEP="startup"
+CURRENT_COMMAND=""
 LAST_COMMAND=""
 NETPLAN_FILE="/etc/netplan/00-installer-config.yaml"
 NETPLAN_INTERFACE="eth0"
 YQ_VERSION="v4.44.3"
+SUPPORTED_DISTRIBUTIONS=("Ubuntu 26.04")
 
 usage() {
   cat <<'EOF'
@@ -60,13 +62,33 @@ warn() { color '1;33' "[WARN] $*"; }
 ok()   { color '1;32' "[ OK ] $*"; }
 err()  { color '1;31' "[ERR ] $*" >&2; }
 
+track_command() {
+  local cmd=${BASH_COMMAND:-}
+
+  case "$cmd" in
+    'track_command'|'on_error '*|'trap '*)
+      return 0
+      ;;
+  esac
+
+  LAST_COMMAND=$CURRENT_COMMAND
+  CURRENT_COMMAND=$cmd
+}
+
 on_error() {
-  local exit_code=$?
-  local line_no=${1:-unknown}
+  local exit_code=${1:-$?}
+  local line_no=${2:-unknown}
+  local failed_command=${3:-${CURRENT_COMMAND:-unknown}}
+
   err "Provisioning failed."
   err "Step      : ${CURRENT_STEP}"
   err "Line      : ${line_no}"
-  err "Command   : ${LAST_COMMAND:-unknown}"
+  err "Command   : ${failed_command:-unknown}"
+
+  if [[ -n ${LAST_COMMAND:-} ]]; then
+    err "Previous  : ${LAST_COMMAND}"
+  fi
+
   err "Exit code : ${exit_code}"
   cat >&2 <<'EOF'
 
@@ -80,8 +102,8 @@ Debug tips:
 EOF
   exit "$exit_code"
 }
-trap 'LAST_COMMAND=$BASH_COMMAND' DEBUG
-trap 'on_error $LINENO' ERR
+trap 'track_command' DEBUG
+trap 'on_error $? $LINENO "$BASH_COMMAND"' ERR
 
 require_root() {
   [[ $EUID -eq 0 ]] || { err "Please run this script as root."; exit 1; }
@@ -175,14 +197,33 @@ validate_env() {
 }
 
 check_os() {
-  if [[ -r /etc/os-release ]]; then
-    # shellcheck disable=SC1091
-    source /etc/os-release
-    info "Detected OS: ${PRETTY_NAME:-unknown}"
+  local distro version pretty_name supported_list
+
+  supported_list=$(printf '%s, ' "${SUPPORTED_DISTRIBUTIONS[@]}")
+  supported_list=${supported_list%, }
+
+  if ! command -v lsb_release >/dev/null 2>&1; then
+    err "The 'lsb_release' command is required for OS compatibility checks."
+    err "Please install it first, e.g.: apt-get update && apt-get install -y lsb-release"
+    err "Supported versions: ${supported_list}"
+    exit 1
   fi
+
+  distro=$(lsb_release -is 2>/dev/null || true)
+  version=$(lsb_release -rs 2>/dev/null || true)
+  pretty_name=$(lsb_release -ds 2>/dev/null || true)
+
+  info "Detected OS: ${pretty_name:-${distro:-unknown} ${version:-unknown}}"
 
   if ! command -v apt-get >/dev/null 2>&1; then
     err "This script currently supports apt-based systems only."
+    err "Supported versions: ${supported_list}"
+    exit 1
+  fi
+
+  if [[ "$distro" != "Ubuntu" || "$version" != "26.04" ]]; then
+    err "Unsupported operating system: ${pretty_name:-${distro:-unknown} ${version:-unknown}}"
+    err "Supported versions: ${supported_list}"
     exit 1
   fi
 }
@@ -199,7 +240,8 @@ install_packages() {
     docker.io \
     apt-listchanges \
     cron \
-    curl
+    curl \
+    lsb-release
 }
 
 ensure_yq() {
@@ -287,7 +329,24 @@ configure_hostname() {
   fi
 }
 
+get_ssh_service_name() {
+  if systemctl list-unit-files --type=service --no-legend 2>/dev/null | grep -q '^ssh\.service'; then
+    printf '%s' 'ssh'
+    return 0
+  fi
+
+  if systemctl list-unit-files --type=service --no-legend 2>/dev/null | grep -q '^sshd\.service'; then
+    printf '%s' 'sshd'
+    return 0
+  fi
+
+  err "Could not determine the OpenSSH service name (ssh.service or sshd.service)."
+  exit 1
+}
+
 configure_ssh() {
+  local ssh_service ssh_unit_state
+
   install -d -m 0755 /etc/ssh/sshd_config.d
 
   # Use a late-sorting filename so these settings override earlier config.d snippets.
@@ -310,13 +369,26 @@ EOF
   rm -f /etc/ssh/sshd_config.d/50-cloud-init.conf
   run_cmd sshd -t
 
-  if systemctl list-unit-files | grep -q '^ssh\.service'; then
-    run_cmd systemctl enable ssh
-    run_cmd systemctl restart ssh
-  else
-    run_cmd systemctl enable sshd
-    run_cmd systemctl restart sshd
-  fi
+  ssh_service=$(get_ssh_service_name)
+  ssh_unit_state=$(systemctl show -p UnitFileState --value "${ssh_service}.service" 2>/dev/null || true)
+
+  case "$ssh_unit_state" in
+    disabled)
+      run_cmd systemctl enable "$ssh_service"
+      ;;
+    masked)
+      err "${ssh_service}.service is masked. Please unmask it before provisioning."
+      exit 1
+      ;;
+    linked|linked-runtime|alias|static|indirect|generated|enabled|enabled-runtime)
+      info "Skipping 'systemctl enable ${ssh_service}' because UnitFileState is '${ssh_unit_state}'."
+      ;;
+    *)
+      warn "Unknown UnitFileState for ${ssh_service}.service: '${ssh_unit_state}'. Trying restart only."
+      ;;
+  esac
+
+  run_cmd systemctl restart "$ssh_service"
 }
 
 parse_port_list() {
