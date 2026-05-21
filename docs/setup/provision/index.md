@@ -7,83 +7,90 @@ description: |
 
 ## Provisioning Nodes
 
-To provision the nodes, we provide a cloud-init script. The [hard manual way is documented here](manual-ubuntu-26-04).
+To provision the nodes, we provide a pure Bash provisioning script. The [hard manual way is documented here](manual-ubuntu-26-04).
 
-### Cloud-Init
+We also keep a [cloud-init.yml](script/cloud-init-ubuntu-26-04.yml) template in this directory, but the recommended setup flow is the Bash script below.
 
-1) Login as root to your new server
-2) Go to /root and run:
+## Use the Provision Script
+
+Use [`rudl-provision-maschine.sh`](script/rudl-provision-maschine.sh) to provision the machine directly on the server without running cloud-init.
+
+### Step-by-Step Instructions
+
+1) Login as `root` to your new server.
+2) Go to `/root` and run:
 
 ```bash
 apt-get update
-apt-get install -y curl cloud-init vim gettext-base
+apt-get install -y curl vim
 export RUDL_DOWNLOAD_URL=https://raw.githubusercontent.com/rudl-project/rudl.infracamp.org/refs/heads/main/docs/setup/provision/script/
 ```
 
 **Problem with vim on new Ubuntu 26.04:**
 
-Copy n past issue with mouse support. Disable mouse support for vim:
+Copy n paste issue with mouse support. Disable mouse support for vim:
 
 ```bash
-update-alternatives --config editor  ## Set Edtior to vim.basic
-echo "set mouse=" > ~/.vimrc           ## Disable mouse support for vim
+update-alternatives --config editor  ## Set Editor to vim.basic
+echo "set mouse=" > ~/.vimrc        ## Disable mouse support for vim
 ```
 
-3) Erstelle die [`server.env` Datei](script/server.env.txt) mit den notwendigen Umgebungsvariablen:
+3) Create the [`server.env` file](script/server.env.txt) with the required variables.
 
-Entweder direkt datei erstellen oder mit curl herunterladen:
+Download the template:
 
 ```bash
 curl -fsSL ${RUDL_DOWNLOAD_URL}server.env.txt -o server.env
 ```
 
-4) Run the cloud-init script:
+Important variables:
 
 ```bash
-curl -fsSL ${RUDL_DOWNLOAD_URL}cloud-init-ubuntu-26-04.yml -o cloud-init-tpl.yml
-set -a && source server.env && set +a && envsubst < cloud-init-tpl.yml > cloud-init.yml
+# Firewall
+OPEN_PORTS_TCP="22,80,443"
+OPEN_PORTS_UDP=""
 
-cloud-init clean --logs
-
-cloud-init single --file cloud-init.yml --name cc_set_hostname --frequency always
-cloud-init single --file cloud-init.yml --name cc_update_hostname --frequency always
-cloud-init single --file cloud-init.yml --name cc_update_etc_hosts --frequency always
-cloud-init single --file cloud-init.yml --name cc_users_groups --frequency always
-cloud-init single --file cloud-init.yml --name cc_write_files --frequency always
-cloud-init single --file cloud-init.yml --name cc_package_update_upgrade_install --frequency always
-cloud-init single --file cloud-init.yml --name cc_runcmd --frequency always
-cloud-init single --name cc_scripts_user --frequency always
-cloud-init status --long
+# DNS / Netplan
+DISABLE_SYSTEMD_RESOLVED_STUB="false"
+NETPLAN_NAMESERVERS=""
 ```
 
-The `status --long` should return status: not started
+Notes:
+- Leave `OPEN_PORTS_TCP` or `OPEN_PORTS_UDP` empty (`""`) if no ports should be opened for that protocol.
+- If a port list is empty, the corresponding nftables `dport { ... }` rule is not written.
+- If you want to run your own DNS service on the host, usually open port `53` for both TCP and UDP.
 
-reboot the system - done
+4) Download the provisioning script and run it:
 
-
-## DNS Stub Listener abschalten
-
-If you want to server DNS Server on the host, you have to disable the Stub-Listener:
-
-```
-# /etc/systemd/resolved.conf
-[Resolve]
-DNSStubListener=no
+```bash
+curl -fsSL ${RUDL_DOWNLOAD_URL}rudl-provision-maschine.sh -o rudl-provision-maschine.sh
+chmod +x rudl-provision-maschine.sh
+./rudl-provision-maschine.sh ./server.env
 ```
 
-Und DNS Server im Netplan konfigurieren:
+For debugging:
 
-```yaml
-# /etc/netplan/00-installer-config.yaml
-network:
-  version: 2
-  ethernets:
-    eth0:
-      dhcp4: no
-      addresses: [<IP_ADDRESS>/24]
-      gateway4: <IP_ADDRESS>
-      nameservers:
-        addresses: [<IP_ADDRESS>]
+```bash
+./rudl-provision-maschine.sh ./server.env --debug
 ```
 
-Achtung: keine Tabs Verwenden! Config mit `sudo netplan try` testen!
+What the script does:
+- installs required packages
+- creates the admin user and SSH authorized key
+- disables root SSH login and password SSH login
+- configures nftables
+- enables unattended upgrades
+- optionally enables the Docker prune cron job
+- optionally disables the systemd-resolved stub listener
+- edits DNS nameservers directly in the netplan file using `yq`
+- installs a compatible `yq` binary automatically if needed
+
+The script uses these built-in netplan defaults:
+- file: `/etc/netplan/00-installer-config.yaml`
+- interface: `eth0`
+
+Netplan DNS changes are written directly into that file for `eth0`, validated with `netplan generate`, but not applied live automatically to avoid breaking the current SSH session. If your machine does not use `eth0`, adjust the script constant first. Apply changes locally with:
+
+```bash
+netplan apply
+```

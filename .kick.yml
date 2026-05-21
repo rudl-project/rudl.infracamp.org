@@ -1,7 +1,11 @@
 # Kickstart container config file - see https://nfra.infracamp.org
 # Run kickstart to start a development-container for this project
 version: 1
-from: "infracamp/kickstart-flavor-jekyll"
+from: "ghcr.io/nfra-project/kickstart-flavor-jekyll:unstable"
+ports: "4000:4000;4100:4100;127.0.0.1:2222:22"
+secrets: open_ai
+
+
 command:
   build:
     - "sudo chmod 777 /var/www/html"
