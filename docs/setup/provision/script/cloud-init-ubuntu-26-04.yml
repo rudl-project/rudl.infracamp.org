@@ -61,7 +61,7 @@ write_files:
           ip6 nexthdr icmpv6 accept
 
           tcp dport { ${OPEN_PORTS_TCP} } accept
-          udp dport { ${OPEN_PORTS_UDP} } accept
+          ##UNCOMMENT FOR UDP PORTS udp dport {  } accept
         }
 
         chain forward {
