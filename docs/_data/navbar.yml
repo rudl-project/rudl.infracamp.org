@@ -5,7 +5,7 @@ brand_href: "/"
 
 main:
   - name: "Provision Node"
-  - href: "/setup/provision"
+    href: "/setup/provision"
   - name: "Setup Master"
     href: "/setup/master"
   - name: "Setup Node"
