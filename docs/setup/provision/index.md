@@ -52,7 +52,7 @@ cloud-init single --file cloud-init.yml --name cc_users_groups --frequency alway
 cloud-init single --file cloud-init.yml --name cc_write_files --frequency always
 cloud-init single --file cloud-init.yml --name cc_package_update_upgrade_install --frequency always
 cloud-init single --file cloud-init.yml --name cc_runcmd --frequency always
-
+cloud-init single --name cc_scripts_user --frequency always
 cloud-init status --long
 ```
 
