@@ -59,3 +59,31 @@ cloud-init status --long
 The `status --long` should return status: not started
 
 reboot the system - done
+
+
+## DNS Stub Listener abschalten
+
+If you want to server DNS Server on the host, you have to disable the Stub-Listener:
+
+```
+# /etc/systemd/resolved.conf
+[Resolve]
+DNSStubListener=no
+```
+
+Und DNS Server im Netplan konfigurieren:
+
+```yaml
+# /etc/netplan/00-installer-config.yaml
+network:
+  version: 2
+  ethernets:
+    eth0:
+      dhcp4: no
+      addresses: [<IP_ADDRESS>/24]
+      gateway4: <IP_ADDRESS>
+      nameservers:
+        addresses: [<IP_ADDRESS>]
+```
+
+Achtung: keine Tabs Verwenden! Config mit `sudo netplan try` testen!
