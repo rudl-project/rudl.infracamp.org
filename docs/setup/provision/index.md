@@ -34,7 +34,7 @@ echo "set mouse=" > ~/.vimrc           ## Disable mouse support for vim
 Entweder direkt datei erstellen oder mit curl herunterladen:
 
 ```bash
-curl -fsSL ${RUDL_DOWNLOAD_URL}server.env -o server.env
+curl -fsSL ${RUDL_DOWNLOAD_URL}server.env.txt -o server.env
 ```
 
 4) Run the cloud-init script:
