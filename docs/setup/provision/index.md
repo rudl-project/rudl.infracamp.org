@@ -40,11 +40,11 @@ curl -fsSL ${RUDL_DOWNLOAD_URL}server.env.txt -o server.env
 4) Run the cloud-init script:
 
 ```bash
-curl -fsSL ${RUDL_DOWNLOAD_URL}cloud-init-ubuntu-26-04.yml -o cloud-init.yml
-set -a && source server.env && set +a && envsubst < cloud-init.yml > cloud-init-mod.yml
+curl -fsSL ${RUDL_DOWNLOAD_URL}cloud-init-ubuntu-26-04.yml -o cloud-init-tpl.yml
+set -a && source server.env && set +a && envsubst < cloud-init-tpl.yml > cloud-init.yml
 
 cloud-init clean --logs
-cloud-init modules --file cloud-init-mod.yml --mode=config
-cloud-init modules --file cloud-init-mod.yml --mode=final
+cloud-init modules --file cloud-init.yml --mode=config
+cloud-init modules --file cloud-init.yml --mode=final
 cloud-init status
 ```
