@@ -17,7 +17,7 @@ To provision the nodes, we provide a cloud-init script. The [hard manual way is 
 ```bash
 apt-get update
 apt-get install -y curl cloud-init vim gettext-base
-export RUDL_DOWNLOAD_URL=https://raw.githubusercontent.com/rudl-project/rudl.infracamp.org/main/docs/setup/provision/script/
+export RUDL_DOWNLOAD_URL=https://raw.githubusercontent.com/rudl-project/rudl.infracamp.org/refs/heads/main/docs/setup/provision/script/
 ```
 
 **Problem with vim on new Ubuntu 26.04:**
