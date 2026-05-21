@@ -1,0 +1,118 @@
+hostname: ${HOSTNAME_SHORT}
+fqdn: ${HOSTNAME_FQDN}
+manage_etc_hosts: true
+
+package_update: true
+package_upgrade: true
+
+packages:
+  - vim
+  - sudo
+  - openssh-server
+  - nftables
+  - unattended-upgrades
+  - apt-listchanges
+  - cron
+
+users:
+  - default
+  - name: ${ADMIN_USER}
+    gecos: ${ADMIN_USER_FULLNAME}
+    shell: /bin/bash
+    groups: sudo
+    sudo: ALL=(ALL) NOPASSWD:ALL
+    lock_passwd: true
+    ssh_authorized_keys:
+      - ${SSH_PUBLIC_KEY}
+
+write_files:
+  - path: /root/.vimrc
+    permissions: "0644"
+    content: |
+      set mouse=
+
+  - path: /home/${ADMIN_USER}/.vimrc
+    owner: ${ADMIN_USER}:${ADMIN_USER}
+    permissions: "0644"
+    content: |
+      set mouse=
+
+  - path: /etc/ssh/sshd_config.d/hardened.conf
+    permissions: "0644"
+    content: |
+      PermitRootLogin no
+      PasswordAuthentication no
+      PubkeyAuthentication yes
+      ChallengeResponseAuthentication no
+      UsePAM yes
+      PermitEmptyPasswords no
+      MaxAuthTries 3
+      PerSourceMaxStartups 3
+      PerSourcePenalties authfail:300
+      Banner none
+      DebianBanner no
+
+  - path: /etc/nftables.conf
+    permissions: "0755"
+    content: |
+      #!/usr/sbin/nft -f
+
+      flush ruleset
+
+      table inet filter {
+        chain input {
+          type filter hook input priority 0;
+          policy drop;
+
+          iif "lo" accept
+          ct state established,related accept
+          ct state invalid drop
+
+          ip protocol icmp accept
+          ip6 nexthdr icmpv6 accept
+
+          tcp dport { ${OPEN_PORTS_TCP} } accept
+          udp dport { ${OPEN_PORTS_UDP} } accept
+        }
+
+        chain forward {
+          type filter hook forward priority 0;
+          policy drop;
+        }
+
+        chain output {
+          type filter hook output priority 0;
+          policy accept;
+        }
+      }
+
+  - path: /etc/cron.d/docker-prune
+    permissions: "0644"
+    content: |
+      0 3 * * * root command -v docker >/dev/null 2>&1 && /usr/bin/docker system prune -af >/var/log/docker-prune.log 2>&1
+
+  - path: /etc/apt/apt.conf.d/20auto-upgrades
+    permissions: "0644"
+    content: |
+      APT::Periodic::Update-Package-Lists "1";
+      APT::Periodic::Unattended-Upgrade "1";
+
+  - path: /etc/apt/apt.conf.d/51unattended-upgrades-local
+    permissions: "0644"
+    content: |
+      Unattended-Upgrade::Mail "${ADMIN_EMAIL}";
+      Unattended-Upgrade::MailReport "on-change";
+      Unattended-Upgrade::Automatic-Reboot "false";
+
+runcmd:
+  - update-alternatives --set editor /usr/bin/vim.basic || true
+  - rm -f /etc/ssh/sshd_config.d/permit_root.conf
+  - sshd -t
+  - systemctl reload ssh || systemctl restart ssh
+  - nft -c -f /etc/nftables.conf
+  - systemctl enable nftables
+  - systemctl restart nftables
+  - systemctl enable cron
+  - systemctl restart cron
+  - systemctl enable unattended-upgrades
+  - systemctl restart unattended-upgrades

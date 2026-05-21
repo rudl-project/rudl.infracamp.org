@@ -5,6 +5,9 @@ description: |
     How to start the master Node 
 ---
 
+[See: How to provision the Nodes](../provision/index.md)
+
+
 ## Setting up the Master Node
 
 To get Rudl up and running, you have to setup the manager cluster

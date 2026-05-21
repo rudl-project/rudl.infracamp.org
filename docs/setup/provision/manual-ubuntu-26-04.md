@@ -1,37 +1,15 @@
 ---
-title: Join Nodes
+title: Provision Nodes
 layout: scrollspy
 description: |
     How to start the client Nodes including Setup for Nodes 
 ---
 
-[See: How to provision the Nodes](../provision/index.md)
-
-## Joining Nodes
-
-SSH into the node system and run
-
-```bash
-cd /root/
-cat <plainPassword> > node_client_secret
-docker swarm init
-cat node_client_secret | docker secret create node_client_secret -
-
-curl -o rudl-node-stack.yml https://raw.githubusercontent.com/rudl-project/rudl.infracamp.org/main/docs/setup/node/rudl-node-stack.yml 
-```
-
-Edit the rudl-node-stack.yml file
-
-Then run the stack
-
-```bash
-docker stack deploy -c rudl-node-stack.yml rudl
-```
 
 
 
 
-## Optimal Setup for Ubuntu 26.04
+### Optimal Setup for Ubuntu 26.04
 
 Base Install Ubuntu 26.04 - then login via root password.
 
@@ -43,7 +21,7 @@ update-alternatives --config editor  ## Set Edtior to vim.basic
 echo "set mouse=" > ~/.vimrc           ## Disable mouse support for vim
 ```
 
-### Create new User and ssh login
+#### Create new User and ssh login
 
 
 ```bash
@@ -53,7 +31,7 @@ sudo usermod -aG sudo $NEW_USER_NAME
 
 Then add `[new_user_name] ALL=(ALL) NOPASSWD:ALL` to `visudo -f /etc/sudoers.d/nopasswd` to allow passwordless `sudo bash`
 
-### Set the Hostname
+#### Set the Hostname
 
 Edit /etc/hosts and set the hostname and shortcut than run
 
@@ -72,7 +50,7 @@ DNSStubListener=no
 Danach Netplan Nameserver Updaten in `/etc/netplan/00-installer-config.yaml`. **Achtung: Keine Tabs benutzen!** Config mit `sudo netplan try` testen!
 
 
-### Allow SSH Public Key Login for User
+#### Allow SSH Public Key Login for User
 
 Run and login to new maschine from your workstation to set the SSH Key. Make sure login and sudo bash works.
 
@@ -80,7 +58,7 @@ Run and login to new maschine from your workstation to set the SSH Key. Make sur
 ssh-copy-id [new_user_name]@host
 ```
 
-### Disable root and password ssh login
+#### Disable root and password ssh login
 
 Edit /etc/ssh/sshd_config
 
@@ -89,7 +67,7 @@ Edit /etc/ssh/sshd_config
 ```
 
 
-### Disable SSH Root and Password login
+#### Disable SSH Root and Password login
 
 ```
 sudo rm /etc/ssh/sshd_config.d/permit_root.conf
@@ -110,7 +88,7 @@ EOF'
 
 
 
-### Configure Firewall
+#### Configure Firewall
 
 Using nftables add [nftables.conf](nftables.conf.txt) to `/etc/nftables.conf` and aktivate
 the Firewall by running 
@@ -121,14 +99,14 @@ sudo nft -f /etc/nftables.conf
 sudo nft list ruleset
 ```
 
-### Configure Cronjobs to cleanup stuff
+#### Configure Cronjobs to cleanup stuff
 
 ```bash
 echo '0 3 * * * root /usr/bin/docker system prune -af >/var/log/docker-prune.log 2>&1' | sudo tee /etc/cron.d/docker-prune
 ```
 
 
-### Unattended Updates aktivieren
+#### Unattended Updates aktivieren
 
 ```bash
 sudo apt install unattended-upgrades apt-listchanges
