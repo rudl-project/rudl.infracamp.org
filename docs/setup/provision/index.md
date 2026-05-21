@@ -52,15 +52,15 @@ Important variables:
 OPEN_PORTS_TCP="22,80,443"
 OPEN_PORTS_UDP=""
 
-# DNS / Netplan
+# DNS
 DISABLE_SYSTEMD_RESOLVED_STUB="false"
-NETPLAN_NAMESERVERS=""
 ```
 
 Notes:
 - Leave `OPEN_PORTS_TCP` or `OPEN_PORTS_UDP` empty (`""`) if no ports should be opened for that protocol.
 - If a port list is empty, the corresponding nftables `dport { ... }` rule is not written.
 - If you want to run your own DNS service on the host, usually open port `53` for both TCP and UDP.
+- **Warning:** if you set `DISABLE_SYSTEMD_RESOLVED_STUB="true"`, you must provide working nameservers in your netplan configuration, otherwise DNS resolution may stop working.
 
 4) Download the provisioning script and run it:
 
@@ -84,15 +84,5 @@ What the script does:
 - enables unattended upgrades
 - optionally enables the Docker prune cron job
 - optionally disables the systemd-resolved stub listener
-- edits DNS nameservers directly in the netplan file using `yq`
-- installs a compatible `yq` binary automatically if needed
 
-The script uses these built-in netplan defaults:
-- file: `/etc/netplan/00-installer-config.yaml`
-- interface: `eth0`
-
-Netplan DNS changes are written directly into that file for `eth0`, validated with `netplan generate`, but not applied live automatically to avoid breaking the current SSH session. If your machine does not use `eth0`, adjust the script constant first. Apply changes locally with:
-
-```bash
-netplan apply
-```
+The script does not edit netplan. If you disable the stub listener, configure nameservers manually in your netplan config first.

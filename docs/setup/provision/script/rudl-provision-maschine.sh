@@ -7,9 +7,6 @@ DEBUG=${DEBUG:-0}
 CURRENT_STEP="startup"
 CURRENT_COMMAND=""
 LAST_COMMAND=""
-NETPLAN_FILE="/etc/netplan/00-installer-config.yaml"
-NETPLAN_INTERFACE="eth0"
-YQ_VERSION="v4.44.3"
 SUPPORTED_DISTRIBUTIONS=("Ubuntu 26.04")
 
 usage() {
@@ -98,7 +95,6 @@ Debug tips:
   - Check ssh config: sshd -t
   - Check firewall config: nft -c -f /etc/nftables.conf
   - Check service status: systemctl --failed
-  - Check netplan config: netplan generate
 EOF
   exit "$exit_code"
 }
@@ -190,10 +186,6 @@ validate_env() {
     warn "SSH_PUBLIC_KEY does not look like a standard SSH public key."
   fi
 
-  if bool_true "${DISABLE_SYSTEMD_RESOLVED_STUB:-false}" && [[ -z $(trim_spaces "${NETPLAN_NAMESERVERS:-}") ]]; then
-    warn "DISABLE_SYSTEMD_RESOLVED_STUB is enabled but NETPLAN_NAMESERVERS is empty."
-    warn "DNS may stop working after reboot unless nameservers are configured in netplan."
-  fi
 }
 
 check_os() {
@@ -240,51 +232,7 @@ install_packages() {
     docker.io \
     apt-listchanges \
     cron \
-    curl \
     lsb-release
-}
-
-ensure_yq() {
-  local tmp_file arch download_url
-
-  if command -v yq >/dev/null 2>&1; then
-    tmp_file=$(mktemp)
-    printf 'a: []\n' > "$tmp_file"
-    if yq -i '.a = ["ok"]' "$tmp_file" >/dev/null 2>&1; then
-      rm -f "$tmp_file"
-      info "Using existing yq: $(yq --version 2>/dev/null || echo yq)"
-      return 0
-    fi
-    rm -f "$tmp_file"
-    warn "Existing yq does not support the required in-place edit syntax. Installing compatible yq ${YQ_VERSION}."
-  else
-    info "yq is not installed. Installing compatible yq ${YQ_VERSION}."
-  fi
-
-  case "$(dpkg --print-architecture)" in
-    amd64) arch='amd64' ;;
-    arm64) arch='arm64' ;;
-    armhf) arch='arm' ;;
-    *)
-      err "Unsupported architecture for automatic yq install: $(dpkg --print-architecture)"
-      exit 1
-      ;;
-  esac
-
-  download_url="https://github.com/mikefarah/yq/releases/download/${YQ_VERSION}/yq_linux_${arch}"
-  run_cmd curl -fsSL "$download_url" -o /usr/local/bin/yq
-  run_cmd chmod 0755 /usr/local/bin/yq
-
-  tmp_file=$(mktemp)
-  printf 'a: []\n' > "$tmp_file"
-  if ! yq -i '.a = ["ok"]' "$tmp_file" >/dev/null 2>&1; then
-    rm -f "$tmp_file"
-    err "Installed yq is still not compatible with the required command syntax."
-    exit 1
-  fi
-  rm -f "$tmp_file"
-
-  ok "Installed yq: $(yq --version 2>/dev/null || echo yq)"
 }
 
 ensure_user() {
@@ -513,73 +461,8 @@ EOF
   run_cmd systemctl restart unattended-upgrades
 }
 
-parse_nameserver_list() {
-  local raw=${1:-}
-  local item
-  local out=()
-
-  raw=$(trim_spaces "$raw")
-  if [[ -z "$raw" ]]; then
-    printf '%s' ""
-    return 0
-  fi
-
-  IFS=',' read -r -a items <<< "$raw"
-  for item in "${items[@]}"; do
-    item=$(trim_spaces "$item")
-    [[ -n "$item" ]] || continue
-    if [[ ! "$item" =~ ^[0-9A-Fa-f:.]+$ ]]; then
-      err "Invalid nameserver entry in NETPLAN_NAMESERVERS: '$item'"
-      exit 1
-    fi
-    out+=("$item")
-  done
-
-  if (( ${#out[@]} == 0 )); then
-    printf '%s' ""
-    return 0
-  fi
-
-  local joined
-  joined=$(IFS=,; echo "${out[*]}")
-  printf '%s' "$joined"
-}
-
-build_yq_string_array() {
-  local raw=${1:-}
-  local item
-  local out=()
-
-  raw=$(trim_spaces "$raw")
-  if [[ -z "$raw" ]]; then
-    printf '%s' ""
-    return 0
-  fi
-
-  IFS=',' read -r -a items <<< "$raw"
-  for item in "${items[@]}"; do
-    item=$(trim_spaces "$item")
-    [[ -n "$item" ]] || continue
-    out+=("\"$item\"")
-  done
-
-  if (( ${#out[@]} == 0 )); then
-    printf '%s' ""
-    return 0
-  fi
-
-  local joined
-  joined=$(IFS=,; echo "${out[*]}")
-  printf '%s' "$joined"
-}
-
 configure_dns() {
   local disable_stub=${DISABLE_SYSTEMD_RESOLVED_STUB:-false}
-  local nameservers_raw netplan_file netplan_iface nameservers nameservers_yq backup_file
-
-  nameservers_raw=$(trim_spaces "${NETPLAN_NAMESERVERS:-}")
-  netplan_file=$NETPLAN_FILE
-  netplan_iface=$NETPLAN_INTERFACE
 
   if bool_true "$disable_stub"; then
     install -d -m 0755 /etc/systemd/resolved.conf.d
@@ -588,44 +471,13 @@ configure_dns() {
 DNSStubListener=no
 EOF
     info "Prepared systemd-resolved stub listener disable config."
+
+    if systemctl list-unit-files --type=service --no-legend 2>/dev/null | grep -q '^systemd-resolved\.service'; then
+      run_cmd systemctl restart systemd-resolved
+    fi
   else
     info "Leaving systemd-resolved stub listener unchanged."
   fi
-
-  if [[ -z "$nameservers_raw" ]]; then
-    info "No NETPLAN_NAMESERVERS configured. Leaving netplan DNS unchanged."
-    return 0
-  fi
-
-  if ! command -v netplan >/dev/null 2>&1; then
-    err "NETPLAN_NAMESERVERS is set, but the 'netplan' command is not available."
-    exit 1
-  fi
-
-  ensure_yq
-
-  nameservers=$(parse_nameserver_list "$nameservers_raw")
-  nameservers_yq=$(build_yq_string_array "$nameservers_raw")
-  require_file "$netplan_file"
-
-  if [[ $(yq e ".network.ethernets.${netplan_iface}" "$netplan_file") == "null" ]]; then
-    err "Required netplan interface '${netplan_iface}' was not found in: $netplan_file"
-    err "Please adjust the script constant NETPLAN_INTERFACE if your server does not use eth0."
-    exit 1
-  fi
-
-  backup_file="${netplan_file}.bak.$(date +%Y%m%d%H%M%S)"
-  run_cmd cp "$netplan_file" "$backup_file"
-  info "Netplan backup written to: $backup_file"
-
-  run_cmd yq -i ".network.ethernets.${netplan_iface}.nameservers.addresses = [${nameservers_yq}]" "$netplan_file"
-
-  run_cmd netplan generate
-  info "Netplan nameservers updated in: $netplan_file"
-  info "Configured interface: ${netplan_iface}"
-  info "Configured nameservers: ${nameservers}"
-  warn "Netplan DNS changes were validated but not applied live to avoid breaking the current SSH session."
-  warn "Apply them locally with: netplan apply"
 }
 
 print_summary() {
@@ -643,14 +495,11 @@ Summary:
   Open UDP ports        : $(value_or_none "${OPEN_PORTS_UDP:-}")
   Docker prune cron     : ${INSTALL_DOCKER_PRUNE_CRON:-true}
   Disable DNS stub      : ${DISABLE_SYSTEMD_RESOLVED_STUB:-false}
-  Netplan nameservers   : $(value_or_none "${NETPLAN_NAMESERVERS:-}")
-  Netplan file          : ${NETPLAN_FILE}
 
 Recommended checks:
   - sshd -t
   - nft list ruleset
   - systemctl --failed
-  - netplan generate
   - getent hosts ${HOSTNAME_FQDN}
 
 A reboot is recommended after first provisioning.
