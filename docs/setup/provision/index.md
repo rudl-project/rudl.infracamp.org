@@ -44,8 +44,16 @@ curl -fsSL ${RUDL_DOWNLOAD_URL}cloud-init-ubuntu-26-04.yml -o cloud-init-tpl.yml
 set -a && source server.env && set +a && envsubst < cloud-init-tpl.yml > cloud-init.yml
 
 cloud-init clean --logs
-cloud-init modules --file cloud-init.yml --mode=config
+
 cloud-init single --file cloud-init.yml --name cc_users_groups --frequency always
-cloud-init modules --file cloud-init.yml --mode=final
-cloud-init status
+cloud-init single --file cloud-init.yml --name cc_write_files --frequency always
+cloud-init single --file cloud-init.yml --name cc_package_update_upgrade_install --frequency always
+
+cloud-init single --file cloud-init.yml --name cc_runcmd --frequency always
+
+cloud-init status --long
 ```
+
+The `status --long` should return status: not started
+
+reboot the system - done
