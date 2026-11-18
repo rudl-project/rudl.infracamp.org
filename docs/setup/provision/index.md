@@ -70,7 +70,12 @@ Notes:
   ```
 
 - CIDR networks such as `203.0.113.0/24` and `2001:db8::/64` are also accepted.
-- When using a VPN with a fixed IPv4 address in `PROTECTED_SOURCE_IPS`, you may need to invoke SSH with `ssh -4 user@host`. This forces IPv4 and ensures the connection uses the permitted VPN route instead of a direct IPv6 connection.
+- With a fixed VPN IPv4, use `ssh -4 user@host` or force IPv4 for the domain in `~/.ssh/config`:
+
+  ```sshconfig
+  Host *.mydomain.xy
+      AddressFamily inet
+  ```
 - Leave `PROTECTED_PORTS_TCP`, `OPEN_PORTS_TCP`, or `OPEN_PORTS_UDP` empty (`""`) if no ports should be opened by that setting.
 - If a port list is empty, the corresponding nftables `dport { ... }` rule is not written.
 - Public ports in `OPEN_PORTS_TCP` and `OPEN_PORTS_UDP` are reachable from every source address.
