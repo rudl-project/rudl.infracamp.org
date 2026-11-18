@@ -306,9 +306,9 @@ PubkeyAuthentication yes
 ChallengeResponseAuthentication no
 UsePAM yes
 PermitEmptyPasswords no
-MaxAuthTries 3
+MaxAuthTries 6
 PerSourceMaxStartups 3
-PerSourcePenalties authfail:300
+PerSourcePenalties authfail:30
 Banner none
 DebianBanner no
 EOF
