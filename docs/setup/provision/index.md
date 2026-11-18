@@ -50,7 +50,7 @@ Important variables:
 ```bash
 # Firewall
 PROTECTED_PORTS_TCP="22"
-PROTECTED_SOURCE_IPS="*"
+PROTECTED_SOURCE_IPS="*" ## Add ipv4 or ipv6 adresses - komma separated list. Leave * for all sources.
 OPEN_PORTS_TCP="80,443"
 OPEN_PORTS_UDP=""
 
