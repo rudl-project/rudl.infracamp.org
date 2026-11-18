@@ -70,7 +70,7 @@ Notes:
   ```
 
 - CIDR networks such as `203.0.113.0/24` and `2001:db8::/64` are also accepted.
-- With a fixed VPN IPv4, use `ssh -4 user@host` or force IPv4 for the domain in `~/.ssh/config`:
+- **Client Config**: With a fixed VPN IPv4, use `ssh -4 user@host` or force IPv4 for the domain in `~/.ssh/config`:
 
   ```sshconfig
   Host *.mydomain.xy
