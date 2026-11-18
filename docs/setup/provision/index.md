@@ -49,7 +49,9 @@ Important variables:
 
 ```bash
 # Firewall
-OPEN_PORTS_TCP="22,80,443"
+PROTECTED_PORTS_TCP="22"
+PROTECTED_SOURCE_IPS="*"
+OPEN_PORTS_TCP="80,443"
 OPEN_PORTS_UDP=""
 
 # DNS
@@ -57,8 +59,20 @@ DISABLE_SYSTEMD_RESOLVED_STUB="false"
 ```
 
 Notes:
-- Leave `OPEN_PORTS_TCP` or `OPEN_PORTS_UDP` empty (`""`) if no ports should be opened for that protocol.
+- `PROTECTED_PORTS_TCP` contains TCP ports that are only accessible from `PROTECTED_SOURCE_IPS`. The template puts SSH port `22` here.
+- `PROTECTED_SOURCE_IPS="*"` (the default) allows all IPv4 and IPv6 sources. To restrict access, use one address or a comma-separated list. IPv4 and IPv6 can be mixed:
+
+  ```bash
+  PROTECTED_SOURCE_IPS="203.0.113.10"
+  PROTECTED_SOURCE_IPS="203.0.113.10,198.51.100.7"
+  PROTECTED_SOURCE_IPS="2001:db8::10"
+  PROTECTED_SOURCE_IPS="203.0.113.10,2001:db8::10,2001:db8::20"
+  ```
+
+- CIDR networks such as `203.0.113.0/24` and `2001:db8::/64` are also accepted.
+- Leave `PROTECTED_PORTS_TCP`, `OPEN_PORTS_TCP`, or `OPEN_PORTS_UDP` empty (`""`) if no ports should be opened by that setting.
 - If a port list is empty, the corresponding nftables `dport { ... }` rule is not written.
+- Public ports in `OPEN_PORTS_TCP` and `OPEN_PORTS_UDP` are reachable from every source address.
 - If you want to run your own DNS service on the host, usually open port `53` for both TCP and UDP.
 - **Warning:** if you set `DISABLE_SYSTEMD_RESOLVED_STUB="true"`, you must provide working nameservers in your netplan configuration, otherwise DNS resolution may stop working.
 

@@ -376,12 +376,56 @@ parse_port_list() {
   printf '%s' "$joined"
 }
 
+parse_protected_sources() {
+  local raw=${1:-*}
+  local source
+  local ipv4=() ipv6=()
+
+  raw=$(trim_spaces "$raw")
+  [[ -n "$raw" ]] || raw="*"
+
+  IFS=',' read -r -a sources <<< "$raw"
+  for source in "${sources[@]}"; do
+    source=$(trim_spaces "$source")
+    [[ -n "$source" ]] || continue
+
+    if [[ "$source" == "*" ]]; then
+      if (( ${#sources[@]} > 1 )); then
+        err "PROTECTED_SOURCE_IPS: '*' cannot be combined with other sources."
+        exit 1
+      fi
+      PROTECTED_IPV4_SOURCES="*"
+      PROTECTED_IPV6_SOURCES="*"
+      return 0
+    fi
+
+    if [[ "$source" =~ ^[0-9.]+(/[0-9]{1,2})?$ ]]; then
+      ipv4+=("$source")
+    elif [[ "$source" =~ ^[0-9A-Fa-f:]+(/[0-9]{1,3})?$ ]]; then
+      ipv6+=("$source")
+    else
+      err "Invalid IP address or network in PROTECTED_SOURCE_IPS: '$source'"
+      exit 1
+    fi
+  done
+
+  PROTECTED_IPV4_SOURCES=$(IFS=,; echo "${ipv4[*]}")
+  PROTECTED_IPV6_SOURCES=$(IFS=,; echo "${ipv6[*]}")
+
+  if [[ -z "$PROTECTED_IPV4_SOURCES" && -z "$PROTECTED_IPV6_SOURCES" ]]; then
+    err "PROTECTED_SOURCE_IPS must contain '*' or at least one IPv4/IPv6 address."
+    exit 1
+  fi
+}
+
 configure_firewall() {
-  local tcp_ports udp_ports
-  local tcp_rule="" udp_rule=""
+  local tcp_ports udp_ports protected_ports
+  local tcp_rule="" udp_rule="" protected_rules=""
+  local PROTECTED_IPV4_SOURCES="" PROTECTED_IPV6_SOURCES=""
 
   tcp_ports=$(parse_port_list "OPEN_PORTS_TCP" "${OPEN_PORTS_TCP:-}")
   udp_ports=$(parse_port_list "OPEN_PORTS_UDP" "${OPEN_PORTS_UDP:-}")
+  protected_ports=$(parse_port_list "PROTECTED_PORTS_TCP" "${PROTECTED_PORTS_TCP:-}")
 
   if [[ -n "$tcp_ports" ]]; then
     tcp_rule=$(printf '        tcp dport { %s } accept' "$tcp_ports")
@@ -389,6 +433,20 @@ configure_firewall() {
 
   if [[ -n "$udp_ports" ]]; then
     udp_rule=$(printf '        udp dport { %s } accept' "$udp_ports")
+  fi
+
+  if [[ -n "$protected_ports" ]]; then
+    parse_protected_sources "${PROTECTED_SOURCE_IPS:-*}"
+    if [[ "$PROTECTED_IPV4_SOURCES" == "*" ]]; then
+      protected_rules=$(printf '        tcp dport { %s } accept' "$protected_ports")
+    else
+      if [[ -n "$PROTECTED_IPV4_SOURCES" ]]; then
+        protected_rules=$(printf '        ip saddr { %s } tcp dport { %s } accept' "$PROTECTED_IPV4_SOURCES" "$protected_ports")
+      fi
+      if [[ -n "$PROTECTED_IPV6_SOURCES" ]]; then
+        protected_rules+=$(printf '%s        ip6 saddr { %s } tcp dport { %s } accept' "${protected_rules:+$'\n'}" "$PROTECTED_IPV6_SOURCES" "$protected_ports")
+      fi
+    fi
   fi
 
   cat > /etc/nftables.conf <<EOF
@@ -411,9 +469,12 @@ table inet filter {
         # ICMP / ping
         ip protocol icmp accept
         ip6 nexthdr icmpv6 accept
-${tcp_rule:+
+${protected_rules:+
 
-        # Allowed TCP ports from env
+        # Protected TCP ports, restricted to configured source IPs
+$protected_rules}${tcp_rule:+
+
+        # Public TCP ports from env
 $tcp_rule}${udp_rule:+
 
         # Allowed UDP ports from env
@@ -503,8 +564,10 @@ Summary:
   SSH key login         : configured
   Password SSH login    : disabled
   Root SSH login        : disabled
-  Open TCP ports        : $(value_or_none "${OPEN_PORTS_TCP:-}")
-  Open UDP ports        : $(value_or_none "${OPEN_PORTS_UDP:-}")
+  Protected TCP ports   : $(value_or_none "${PROTECTED_PORTS_TCP:-}")
+  Protected source IPs  : $(value_or_none "${PROTECTED_SOURCE_IPS:-*}")
+  Public TCP ports      : $(value_or_none "${OPEN_PORTS_TCP:-}")
+  Public UDP ports      : $(value_or_none "${OPEN_PORTS_UDP:-}")
   Docker prune cron     : ${INSTALL_DOCKER_PRUNE_CRON:-true}
   Disable DNS stub      : ${DISABLE_SYSTEMD_RESOLVED_STUB:-false}
 

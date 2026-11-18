@@ -7,6 +7,21 @@ description: |
 
 [See: How to provision the Nodes](../provision/index.md)
 
+For a node that does not expose public services itself, use the following firewall settings in `server.env`:
+
+```bash
+PROTECTED_PORTS_TCP="22"
+PROTECTED_SOURCE_IPS="*" # Replace with one or more trusted IPv4/IPv6 addresses
+OPEN_PORTS_TCP=""
+OPEN_PORTS_UDP=""
+```
+
+For example, restrict SSH to multiple trusted IPv4 and IPv6 addresses with:
+
+```bash
+PROTECTED_SOURCE_IPS="203.0.113.10,198.51.100.7,2001:db8::10"
+```
+
 ## Joining Nodes
 
 SSH into the node system and run
